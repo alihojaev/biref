@@ -1,0 +1,12 @@
+.huggingface
+huggingface
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.tmp
+*.log
+.git
+.gitignore

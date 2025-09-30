@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+runpod==1.6.2
+pillow==10.4.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+huggingface_hub==0.24.6
+timm==1.0.9
+einops==0.8.0
+PyYAML==6.0.2
+# Fallback background removal
+rembg==2.0.57
+onnxruntime==1.18.1
+# BiRefNet package will be installed in Dockerfile via git+https clone

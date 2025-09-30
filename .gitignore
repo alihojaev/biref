@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.log
+.venv/
+.env
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Caches
+.mypy_cache/
+.pytest_cache/
+
+# Hugging Face caches
+huggingface/
+.huggingface/
