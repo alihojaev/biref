@@ -36,6 +36,25 @@ def _image_to_b64(img: Image.Image) -> str:
     return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 
+def _normalize_mask(mask_img: Image.Image, size: Optional[tuple] = None) -> Image.Image:
+    """Normalize an input mask image to single-channel 8-bit ('L'),
+    optionally resizing to match the target size.
+
+    Accepts:
+    - RGBA: uses the alpha channel
+    - RGB/others: converts to grayscale 'L'
+    """
+    if size is not None and mask_img.size != size:
+        # For masks, bilinear is a reasonable default to avoid aliasing
+        mask_img = mask_img.resize(size, Image.BILINEAR)
+    if mask_img.mode == 'RGBA':
+        alpha = mask_img.split()[-1]
+        return alpha
+    if mask_img.mode != 'L':
+        return mask_img.convert('L')
+    return mask_img
+
+
 def _load_birefnet():
     global _biref_model
     if _biref_model is not None:
@@ -120,10 +139,25 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
         payload = (event or {}).get('input', {})
         image_b64: Optional[str] = payload.get('image')
         return_mask: bool = bool(payload.get('return_mask', False))
+        user_mask_b64: Optional[str] = payload.get('mask')
         if not image_b64:
             return {'error': "Missing 'image' (base64)"}
         img = _b64_to_image(image_b64)
         out_rgba = _infer_rgba(img)
+
+        # If user provided their own mask, normalize and use it
+        if user_mask_b64:
+            try:
+                mask_img = _b64_to_image(user_mask_b64)
+                norm_mask = _normalize_mask(mask_img, size=out_rgba.size)
+                # Ensure mask is 8-bit single channel
+                if norm_mask.mode != 'L':
+                    norm_mask = norm_mask.convert('L')
+                # Compose RGBA with user's mask as alpha
+                rgb = out_rgba.convert('RGB')
+                out_rgba = Image.merge('RGBA', (*rgb.split(), norm_mask))
+            except Exception as me:
+                return {'error': f"Invalid 'mask' provided: {me}"}
         if return_mask:
             alpha = out_rgba.split()[-1]
             buf = io.BytesIO()
